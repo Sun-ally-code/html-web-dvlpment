@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Simple Contact Form | Clean Design</title>
+  <!-- Separate CSS file (embedded style block for simplicity, but fully separated in structure) -->
+  
+    <link rel="stylesheet" href="css.css">
+    
+</head>
+<body>
+
+<div class="form-card">
+  <div class="form-header">
+    <h1>✉️ Get in touch</h1>
+    <p>We’d love to hear from you — fill out the form below</p>
+  </div>
+
+  <form id="contactFormElement" class="contact-form" action="#" method="post">
+    <!-- Full name -->
+    <div class="field-group">
+      <label for="fullname">Full name</label>
+      <input type="text" id="fullname" name="fullname" placeholder="Alex Johnson" autocomplete="name" required>
+    </div>
+
+    <!-- Email address -->
+    <div class="field-group">
+      <label for="email">Email address</label>
+      <input type="email" id="email" name="email" placeholder="hello@example.com" autocomplete="email" required>
+    </div>
+
+    <!-- Phone number -->
+    <div class="field-group">
+      <label for="phone">Phone number</label>
+      <input type="tel" id="phone" name="phone" placeholder="+1 234 567 8900" autocomplete="tel">
+    </div>
+
+    <!-- Subject line -->
+    <div class="field-group">
+      <label for="subject">Subject line</label>
+      <input type="text" id="subject" name="subject" placeholder="What's this about?" required>
+    </div>
+
+    <!-- Message -->
+    <div class="field-group">
+      <label for="message">Message</label>
+      <textarea id="message" name="message" placeholder="Write your message here ..." required></textarea>
+    </div>
+
+    <!-- Send button -->
+    <div class="button-wrapper">
+      <button type="submit" class="send-btn" id="submitBtn">
+        <span>📨 Send message</span>
+      </button>
+    </div>
+
+    <!-- area to show form feedback (success/error) -->
+    <div id="formFeedback" class="toast-message" style="display: none;"></div>
+  </form>
+</div>
+
+<!-- separate JavaScript for handling the contact form logic & validation
+     (CSS is already in style block but it's conceptually separated: no inline styles on elements) 
+     This script is completely separate from styling, just behavior -->
+<script>
+  (function() {
+    // ---------- DOM elements ----------
+    const form = document.getElementById('contactFormElement');
+    const feedbackDiv = document.getElementById('formFeedback');
+
+    // Input fields
+    const fullnameInput = document.getElementById('fullname');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const subjectInput = document.getElementById('subject');
+    const messageInput = document.getElementById('message');
+
+    // Helper: show feedback message (success / error)
+    function showFeedback(message, isError = false) {
+      if (!feedbackDiv) return;
+      feedbackDiv.textContent = message;
+      feedbackDiv.style.display = 'block';
+      feedbackDiv.className = 'toast-message';  // reset base
+      if (isError) {
+        feedbackDiv.classList.add('toast-error');
+      } else {
+        feedbackDiv.classList.add('toast-success');
+      }
+      // Auto-hide after 5 seconds if it's success, but keep errors a bit longer? we'll keep both 4.5s
+      setTimeout(() => {
+        if (feedbackDiv) {
+          feedbackDiv.style.opacity = '0';
+          setTimeout(() => {
+            if (feedbackDiv) {
+              feedbackDiv.style.display = 'none';
+              feedbackDiv.style.opacity = '';
+            }
+          }, 200);
+        }
+      }, 4500);
+    }
+
+    // clear previous feedback on new submit start (optional UI)
+    function clearFeedback() {
+      if (feedbackDiv) {
+        feedbackDiv.style.display = 'none';
+        feedbackDiv.className = 'toast-message';
+      }
+    }
+
+    // Email validation (simple but robust)
+    function isValidEmail(email) {
+      if (!email) return false;
+      const emailPattern = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+      return emailPattern.test(email);
+    }
+
+    // Phone validation: allow numbers, spaces, +, -, parentheses — just check if not empty? basic check: allow flexible but at least 5 chars if provided?
+    // but phone is optional, so if not empty, we can check it contains only valid characters.
+    function isValidPhone(phone) {
+      if (!phone.trim()) return true;   // phone optional
+      // allow digits, spaces, +, -, (, ) — no crazy symbols
+      const phonePattern = /^[\+\-\s\(\)0-9]{5,20}$/;
+      return phonePattern.test(phone.trim());
+    }
+
+    // Main form submit handler
+    function handleFormSubmit(event) {
+      event.preventDefault();   // prevent page reload / default POST
+
+      clearFeedback();
+
+      // Get trimmed values
+      const fullname = fullnameInput.value.trim();
+      const email = emailInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const subject = subjectInput.value.trim();
+      const message = messageInput.value.trim();
+
+      // ----- validation rules -----
+      if (fullname === "") {
+        showFeedback("❌ Please enter your full name.", true);
+        fullnameInput.focus();
+        return;
+      }
+      if (fullname.length < 2) {
+        showFeedback("❌ Name must be at least 2 characters.", true);
+        fullnameInput.focus();
+        return;
+      }
+
+      if (email === "") {
+        showFeedback("❌ Email address is required.", true);
+        emailInput.focus();
+        return;
+      }
+      if (!isValidEmail(email)) {
+        showFeedback("❌ Please provide a valid email address (e.g., name@domain.com).", true);
+        emailInput.focus();
+        return;
+      }
+
+      if (!isValidPhone(phone)) {
+        showFeedback("📞 Phone number seems invalid (use digits, spaces, +, -). Optional but please correct or leave empty.", true);
+        phoneInput.focus();
+        return;
+      }
+
+      if (subject === "") {
+        showFeedback("✏️ Subject line cannot be empty.", true);
+        subjectInput.focus();
+        return;
+      }
+      if (subject.length < 3) {
+        showFeedback("✏️ Subject should be at least 3 characters.", true);
+        subjectInput.focus();
+        return;
+      }
+
+      if (message === "") {
+        showFeedback("💬 Please write your message.", true);
+        messageInput.focus();
+        return;
+      }
+      if (message.length < 5) {
+        showFeedback("💬 Message is too short (minimum 5 characters).", true);
+        messageInput.focus();
+        return;
+      }
+
+      // At this point data is valid.
+      // For demo purpose, we simulate success (no actual backend call)
+      // But we can also log to console and show what would be sent.
+      const formData = {
+        fullName: fullname,
+        email: email,
+        phoneNumber: phone || "(not provided)",
+        subject: subject,
+        message: message,
+        timestamp: new Date().toLocaleString()
+      };
+
+      console.log("📬 Contact form submitted (demo mode):", formData);
+
+      // Optional: show success & optionally reset form? not resetting automatically — but we can show success and maybe clear fields? 
+      // but better to let user decide, just give nice feedback
+      showFeedback(`✅ Message sent successfully! Thanks ${fullname.split(' ')[0]}, we'll reply soon.`, false);
+
+      // (optional) clear the form after 0.5 sec? Not required but some prefer.
+      // to mimic real-world better, we can decide to reset the form after success, but we'll keep data, but reset after success
+      // but that might be annoying, so I'll leave it, but provide a subtle reset? I'll add a small reset if user clicks "send another"? 
+      // Better: we keep the success message, but do NOT automatically erase fields. However, we could optionally check for a "reset"?
+      // The requirement just says "implement contact form with css and main code separate". That's fully done.
+      // I keep form filled, but user can submit again after making modifications — that's fine.
+      
+      // also tiny UX: we optionally disable button for 1 sec to prevent double-spam
+      const submitBtn = document.getElementById('submitBtn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.7';
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+        }, 1500);
+      }
+    }
+
+    // Attach event listener
+    if (form) {
+      form.addEventListener('submit', handleFormSubmit);
+    }
+
+    // Additional simple client-side: optional live character counters? no needed.
+    // For better accessibility & UX, on page load, set focus to first field
+    if (fullnameInput) {
+      fullnameInput.focus();
+    }
+  })();
+</script>
+</body>
+</html>
